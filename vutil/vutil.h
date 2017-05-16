@@ -29,6 +29,11 @@
 #  define MUTABLE_SV(p)	((SV *)MUTABLE_PTR(p))
 #endif
 
+#ifndef hv_existss
+#  define hv_existss(hv, key) \
+          hv_exists((hv), ("" key ""), (sizeof(key)-1))
+#endif
+
 #ifndef SvPVx_nolen_const
 #  if defined(__GNUC__) && !defined(PERL_GCC_BRACE_GROUPS_FORBIDDEN)
 #    define SvPVx_nolen_const(sv) ({SV *_sv = (sv); SvPV_nolen_const(_sv); })
@@ -251,6 +256,9 @@ const char * Perl_prescan_version(pTHX_ const char *s, bool strict, const char**
 #  define strNEc(s, c) memNE(s, ("" c ""), sizeof(c))
 #endif
 
+#ifndef LOCK_NUMERIC_STANDARD
+#  define LOCK_NUMERIC_STANDARD()
+#endif
 #ifndef UNLOCK_NUMERIC_STANDARD
 #  define UNLOCK_NUMERIC_STANDARD()
 #endif

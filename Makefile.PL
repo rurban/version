@@ -60,6 +60,7 @@ sub write_makefile
                    NORECURS        => $no_xs,
                    ABSTRACT    => 'Structured version objects',
                    AUTHOR      => 'John Peacock <jpeacock@cpan.org>',
+                   # cperl support by Reini Urban
                    ( $] >= 5.009001 && $] < 5.011000 ?
                      ( INSTALLDIRS => 'perl' ) :
                      ()
@@ -96,8 +97,7 @@ sub write_makefile
                        resources => {
                            repository => {
                                type => 'git',
-                               url => 'git://github.com/JohnPeacock/version.pm.git',
-                               web  => 'http://github.com/JohnPeacock/version.pm',
+                               url => 'https://github.com/rurban/version'
                            },
                            bugtracker => {
                                web => 'https://rt.cpan.org/Public/Dist/Display.html?Name=version',
