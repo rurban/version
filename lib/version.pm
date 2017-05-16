@@ -8,7 +8,10 @@ if ($] >= 5.015) {
     warnings::register_categories(qw/version/);
 }
 
-our $VERSION = 0.9924;
+our $VERSION = '0.9924_02';
+our $XS_VERSION = $VERSION;
+#$VERSION =~ s/c$//;
+$VERSION = eval $VERSION;
 our $CLASS = 'version';
 our (@ISA, $STRICT, $LAX);
 
@@ -33,7 +36,7 @@ our (@ISA, $STRICT, $LAX);
 	    *version::stringify = \&version::vpp::stringify;
 	    *{'version::(""'} = \&version::vpp::stringify;
 	    *{'version::(<=>'} = \&version::vpp::vcmp;
-	    *{'version::(cmp'} = \&version::vpp::vcmp;
+	    *{'version::(cmp'} = \&version::vpp::scmp;
 	    *version::parse = \&version::vpp::parse;
 	}
     }

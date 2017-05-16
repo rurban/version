@@ -46,7 +46,7 @@
     {VXS_CLASS "::(0+", VXSp(version_numify), VXSXSDP(NULL)},
     {VXS_CLASS "::numify", VXSp(version_numify), VXSXSDP(NULL)},
     {VXS_CLASS "::normal", VXSp(version_normal), VXSXSDP(NULL)},
-    {VXS_CLASS "::(cmp", VXSp(version_vcmp), VXSXSDP(NULL)},
+    {VXS_CLASS "::(cmp", VXSp(version_scmp), VXSXSDP(NULL)},
     {VXS_CLASS "::(<=>", VXSp(version_vcmp), VXSXSDP(NULL)},
 #  ifdef PERL_CORE
     {VXS_CLASS "::vcmp", XS_version_vcmp, VXSXSDP(NULL)},
@@ -91,6 +91,7 @@ typedef char HVNAME;
 
 VXS(universal_version)
 {
+    dVAR;
     dXSARGS;
     HV *pkg;
     GV **gvp;
@@ -163,7 +164,7 @@ VXS(universal_version)
 	}
 
 	if ( VCMP( req, sv ) > 0 ) {
-	    if ( hv_exists(MUTABLE_HV(SvRV(req)), "qv", 2 ) ) {
+	    if ( hv_existss(MUTABLE_HV(SvRV(req)), "qv") ) {
 		req = VNORMAL(req);
 		sv  = VNORMAL(sv);
 	    }
@@ -190,6 +191,7 @@ VXS(universal_version)
 
 VXS(version_new)
 {
+    dVAR;
     dXSARGS;
     SV *vs;
     SV *rv;
@@ -229,6 +231,7 @@ VXS(version_new)
     default:
     case 0:
         Perl_croak_nocontext("Usage: version::new(class, version)");
+        break;
     }
 
     svarg0 = ST(0);
@@ -270,6 +273,7 @@ VXS(version_new)
 
 VXS(version_stringify)
 {
+     dVAR;
      dXSARGS;
      if (items < 1)
 	 croak_xs_usage(cv, "lobj, ...");
@@ -284,6 +288,7 @@ VXS(version_stringify)
 
 VXS(version_numify)
 {
+     dVAR;
      dXSARGS;
      if (items < 1)
 	 croak_xs_usage(cv, "lobj, ...");
@@ -297,6 +302,7 @@ VXS(version_numify)
 
 VXS(version_normal)
 {
+     dVAR;
      dXSARGS;
      if (items != 1)
 	 croak_xs_usage(cv, "ver");
@@ -311,9 +317,10 @@ VXS(version_normal)
 
 VXS(version_vcmp)
 {
+     dVAR;
      dXSARGS;
      if (items < 1)
-	 croak_xs_usage(cv, "lobj, ...");
+	 croak_xs_usage(cv, "lversion, rversion, swap");
      SP -= items;
      {
 	  SV *	lobj;
@@ -344,8 +351,47 @@ VXS(version_vcmp)
      }
 }
 
+VXS(version_scmp)
+{
+     dVAR;
+     dXSARGS;
+     if (items < 1)
+	 croak_xs_usage(cv, "lversion, rversion, swap");
+     SP -= items;
+     {
+	  SV *lobj;
+	  VTYPECHECK(lobj, ST(0), "lobj");
+	  {
+	       SV *rs;
+	       SV *rvs;
+	       SV *robj       = ST(1);
+	       const IV	 swap = SvIV(ST(2));
+               const int lc   = hv_exists(MUTABLE_HV(SvRV(ST(0))), "cperl", 5);
+               int ri;
+               int rc;
+
+	       if ( !ISA_VERSION_OBJ(robj) )
+	       {
+		   robj = sv_2mortal(NEW_VERSION(SvOK(robj) ? robj
+                                                 : newSVpvs_flags("0", SVs_TEMP)));
+	       }
+               rc  = (SvTYPE(robj) >= SVt_PVHV) && hv_exists(MUTABLE_HV(robj), "cperl", 5);
+	       rvs = SvRV(robj);
+
+	       ri = swap ? VCMP(rvs,lobj) : VCMP(lobj,rvs);
+               if (ri == 0 && lc != rc)
+                   rs = newSViv(swap && rc ? 1 : -1);
+               else
+                   rs = newSViv(ri);
+
+	       VXS_RETURN_M_SV(rs);
+	  }
+     }
+}
+
 VXS(version_boolean)
 {
+    dVAR;
     dXSARGS;
     SV *lobj;
     if (items < 1)
@@ -366,6 +412,7 @@ VXS(version_boolean)
 
 VXS(version_noop)
 {
+    dVAR;
     dXSARGS;
     if (items < 1)
 	croak_xs_usage(cv, "lobj, ...");
@@ -380,6 +427,7 @@ static
 void
 S_version_check_key(pTHX_ CV * cv, const char * key, int keylen)
 {
+    dVAR;
     dXSARGS;
     if (items != 1)
 	croak_xs_usage(cv, "lobj");
@@ -404,6 +452,7 @@ VXS(version_is_alpha)
 
 VXS(version_qv)
 {
+    dVAR;
     dXSARGS;
     PERL_UNUSED_ARG(cv);
     SP -= items;

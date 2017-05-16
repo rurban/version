@@ -1,4 +1,3 @@
 vxs.c
-/MYMETA.*
-/Makefile
-/pm_to_blib
+vxs.bs
+vxs.o

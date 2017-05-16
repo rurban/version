@@ -1,13 +1,25 @@
 /* This file is part of the "version" CPAN distribution.  Please avoid
    editing it in the perl core. */
 
-#ifdef PERL_CORE
-#  include "vutil.h"
+#ifndef PERL_CORE
+#  define PERL_NO_GET_CONTEXT
+#  include "EXTERN.h"
+#  include "perl.h"
+#  include "XSUB.h"
+#  define NEED_my_snprintf
+#  define NEED_newRV_noinc
+#  define NEED_vnewSVpvf
+#  define NEED_newSVpvn_flags_GLOBAL
+#  define NEED_warner
+#  include "ppport.h"
 #endif
+#include "vutil.h"
 
 #define VERSION_MAX 0x7FFFFFFF
 
 /*
+=head1 Versioning
+
 =for apidoc prescan_version
 
 Validate that a given string can be parsed as a version object, but doesn't
@@ -149,6 +161,13 @@ dotted_decimal_version:
 	    /* found just an integer */
 	    goto version_prescan_finish;
 	}
+#ifdef USE_CPERL
+	else if ( *d == 'c' && !*(d+1)) {
+            if (saw_decimal && isDIGIT(*(d-1)))
+              qv = TRUE;
+            goto version_prescan_finish;
+        }
+#endif
 	else if ( d == s ) {
 	    /* didn't find either integer or period */
 	    BADVERSION(s,errstr,"Invalid version format (non-numeric data)");
@@ -188,6 +207,7 @@ dotted_decimal_version:
 		}
 		d = (char *)s; 		/* start all over again */
 		qv = TRUE;
+                saw_decimal++;
 		goto dotted_decimal_version;
 	    }
 	    if (*d == '_') {
@@ -211,7 +231,12 @@ version_prescan_finish:
     while (isSPACE(*d))
 	d++;
 
-    if (!isDIGIT(*d) && (! (!*d || *d == ';' || *d == '{' || *d == '}') )) {
+    if (!isDIGIT(*d) && (! (!*d || *d == ';' || *d == '{' || *d == '}') )
+#ifdef USE_CPERL
+	&& (*d != 'c'|| *(d+1))
+#endif
+       )
+    {
 	/* trailing non-numeric data */
 	BADVERSION(s,errstr,"Invalid version format (non-numeric data)");
     }
@@ -280,7 +305,7 @@ Perl_scan_version(pTHX_ const char *s, SV *rv, bool qv)
     last = PRESCAN_VERSION(s, FALSE, &errstr, &qv, &saw_decimal, &width, &alpha);
     if (errstr) {
 	/* "undef" is a special case and not an error */
-	if ( ! ( *s == 'u' && strEQ(s+1,"ndef")) ) {
+	if ( strNEc(s, "undef") ) {
 	    Perl_croak(aTHX_ "%s", errstr);
 	}
     }
@@ -391,6 +416,13 @@ Perl_scan_version(pTHX_ const char *s, SV *rv, bool qv)
 		s = ++pos;
 	    else if ( isDIGIT(*pos) )
 		s = pos;
+#ifdef USE_CPERL
+	    else if ( *pos == 'c' && !*(pos+1) ) {
+		s = ++pos;
+                (void)hv_stores(MUTABLE_HV(hv), "cperl", newSViv(1));
+		break;
+            }
+#endif
 	    else {
 		s = pos;
 		break;
@@ -446,7 +478,7 @@ Perl_scan_version(pTHX_ const char *s, SV *rv, bool qv)
     (void)hv_stores(MUTABLE_HV(hv), "version", newRV_noinc(MUTABLE_SV(av)));
 
     /* fix RT#19517 - special case 'undef' as string */
-    if ( *s == 'u' && strEQ(s+1,"ndef") ) {
+    if ( strEQc(s, "undef") ) {
 	s += 5;
     }
 
@@ -473,6 +505,7 @@ Perl_new_version2(pTHX_ SV *ver)
 Perl_new_version(pTHX_ SV *ver)
 #endif
 {
+    dVAR;
     SV * const rv = newSV(0);
     PERL_ARGS_ASSERT_NEW_VERSION;
     if ( ISA_VERSION_OBJ(ver) ) /* can just copy directly */
@@ -491,10 +524,10 @@ Perl_new_version(pTHX_ SV *ver)
 	    ver = SvRV(ver);
 
 	/* Begin copying all of the elements */
-	if ( hv_exists(MUTABLE_HV(ver), "qv", 2) )
+	if ( hv_existss(MUTABLE_HV(ver), "qv") )
 	    (void)hv_stores(MUTABLE_HV(hv), "qv", newSViv(1));
 
-	if ( hv_exists(MUTABLE_HV(ver), "alpha", 5) )
+	if ( hv_existss(MUTABLE_HV(ver), "alpha") )
 	    (void)hv_stores(MUTABLE_HV(hv), "alpha", newSViv(1));
 	{
 	    SV ** svp = hv_fetchs(MUTABLE_HV(ver), "width", FALSE);
@@ -635,8 +668,8 @@ VER_NV:
             LC_NUMERIC_LOCK(0);    /* Start critical section */
 
             locale_name_on_entry = setlocale(LC_NUMERIC, NULL);
-            if (   strNE(locale_name_on_entry, "C")
-                && strNE(locale_name_on_entry, "POSIX"))
+            if (   strNEc(locale_name_on_entry, "C")
+                && strNEc(locale_name_on_entry, "POSIX"))
             {
                 setlocale(LC_NUMERIC, "C");
             }
@@ -658,8 +691,8 @@ VER_NV:
                 LC_NUMERIC_LOCK(0);
 
                 locale_name_on_entry = setlocale(LC_NUMERIC, NULL);
-                if (   strNE(locale_name_on_entry, "C")
-                    && strNE(locale_name_on_entry, "POSIX"))
+                if (   strNEc(locale_name_on_entry, "C")
+                    && strNEc(locale_name_on_entry, "POSIX"))
                 {
                     setlocale(LC_NUMERIC, "C");
                 }
@@ -693,12 +726,12 @@ VER_NV:
 #endif
 
 	if (sv) {
-                Perl_sv_catpvf(aTHX_ sv, "%.9" NVff, SvNVX(ver));
+	    Perl_sv_catpvf(aTHX_ sv, "%.9" NVff, SvNVX(ver));
 	    len = SvCUR(sv);
 	    buf = SvPVX(sv);
 	}
 	else {
-                len = my_snprintf(tbuf, sizeof(tbuf), "%.9" NVff, SvNVX(ver));
+	    len = my_snprintf(tbuf, sizeof(tbuf), "%.9" NVff, SvNVX(ver));
 	    buf = tbuf;
 	}
 
@@ -807,6 +840,10 @@ VER_PV:
     }
 
     s = SCAN_VERSION(version, ver, qv);
+#ifdef USE_CPERL
+    if ( *s == 'c' && !*(s+1) )
+        return ver;
+#endif
     if ( *s != '\0' ) 
 	Perl_ck_warner(aTHX_ packWARN(WARN_MISC), 
 		       "Version string '%s' contains invalid data; "
@@ -907,7 +944,7 @@ Perl_vnumify(pTHX_ SV *vs)
 	Perl_croak(aTHX_ "Invalid version object");
 
     /* see if various flags exist */
-    if ( hv_exists(MUTABLE_HV(vs), "alpha", 5 ) )
+    if ( hv_existss(MUTABLE_HV(vs), "alpha") )
 	alpha = TRUE;
 
     if (alpha) {
@@ -1000,6 +1037,8 @@ Perl_vnormal(pTHX_ SV *vs)
 	for ( len = 2 - len; len != 0; len-- )
 	    sv_catpvs(sv,".0");
     }
+    if ( hv_exists(MUTABLE_HV(vs), "cperl", 5) )
+        sv_catpvs(sv,"c");
     return sv;
 }
 
@@ -1045,7 +1084,7 @@ Perl_vstringify(pTHX_ SV *vs)
 	    return &PL_sv_undef;
     }
     else {
-	if ( hv_exists(MUTABLE_HV(vs), "qv", 2) )
+	if ( hv_existss(MUTABLE_HV(vs), "qv") )
 	    return VNORMAL(vs);
 	else
 	    return VNUMIFY(vs);
@@ -1132,5 +1171,3 @@ Perl_vcmp(pTHX_ SV *lhv, SV *rhv)
     }
     return retval;
 }
-
-/* ex: set ro: */
