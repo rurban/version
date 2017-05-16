@@ -29,6 +29,11 @@
 #  define MUTABLE_SV(p)	((SV *)MUTABLE_PTR(p))
 #endif
 
+#ifndef hv_existss
+#  define hv_existss(hv, key) \
+          hv_exists((hv), ("" key ""), (sizeof(key)-1))
+#endif
+
 #ifndef SvPVx_nolen_const
 #  if defined(__GNUC__) && !defined(PERL_GCC_BRACE_GROUPS_FORBIDDEN)
 #    define SvPVx_nolen_const(sv) ({SV *_sv = (sv); SvPV_nolen_const(_sv); })
@@ -115,7 +120,7 @@ S_croak_xs_usage(pTHX_ const CV *const cv, const char *const params)
             Perl_croak_nocontext("Usage: %s(%s)", gvname, params);
     } else {
         /* Pants. I don't think that it should be possible to get here. */
-        Perl_croak_nocontext("Usage: CODE(0x%"UVxf")(%s)", PTR2UV(cv), params);
+        Perl_croak_nocontext("Usage: CODE(0x%" UVxf ")(%s)", PTR2UV(cv), params);
     }
 }
 
@@ -239,8 +244,15 @@ const char * Perl_prescan_version(pTHX_ const char *s, bool strict, const char**
 #  define RESTORE_NUMERIC_LOCAL()
 # endif
 #endif
+#ifndef LOCK_NUMERIC_STANDARD
+#  define LOCK_NUMERIC_STANDARD()
+#  define UNLOCK_NUMERIC_STANDARD()
+#endif
 
 /* from cperl */
 #ifndef strNEs
-#define strNEs(s1,s2) (strncmp(s1,"" s2 "", sizeof(s2)-1))
+#  define strNEs(s1,s2) (strncmp(s1,"" s2 "", sizeof(s2)-1))
+#endif
+#ifndef strEQc
+#  define strEQc(s, c) memEQ(s, ("" c ""), sizeof(c))
 #endif

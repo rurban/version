@@ -45,21 +45,21 @@ write_makefile();
 
 sub write_makefile
 {
-    my %prereq = (
-        'ExtUtils::MakeMaker'   => 6.17,
+    my %test_prereq = (
         'Test::More'            => 0.45,
         'File::Temp'            => 0.13,
         'parent'                => 0.221,
     );
 
-    WriteMakefile( VERSION         => '0.9917_02',
+    WriteMakefile( VERSION         => '0.9918_01',
                    NAME            => 'version',
                    LICENSE         => 'perl',
                    MIN_PERL_VERSION=> 5.006002,
-                   PREREQ_PM       => \%prereq,
+                   TEST_REQUIRES   => \%test_prereq,
                    NORECURS        => $no_xs,
                    ABSTRACT    => 'Structured version objects',
                    AUTHOR      => 'John Peacock <jpeacock@cpan.org>',
+                   # cperl support by Reini Urban
                    ( $] >= 5.009001 && $] < 5.011000 ?
                      ( INSTALLDIRS => 'perl' ) :
                      ()
@@ -90,16 +90,13 @@ sub write_makefile
                    dist            => {
                        COMPRESS => 'gzip -9f',
                        SUFFIX => 'gz',
-                       PREOP  => (
-                          'hg log --style changelog > Changes'
-                       ),
                    },
                    META_MERGE => {
                        "meta-spec" => { version => 2 },
                        resources => {
                            repository => {
-                               type => 'hg',
-                               url => 'https://bitbucket.org/jpeacock/version'
+                               type => 'git',
+                               url => 'https://github.com/rurban/version'
                            },
                            bugtracker => {
                                web => 'https://rt.cpan.org/Public/Dist/Display.html?Name=version',

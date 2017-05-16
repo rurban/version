@@ -1,13 +1,12 @@
-Changes
-lib/version.pm
-lib/version.pod
-lib/version/regex.pm
-lib/version/Internals.pod
-Makefile.PL
+CHANGES
 MANIFEST
 MANIFEST.SKIP
-META.yml
+Makefile.PL
 README
+lib/version.pm
+lib/version.pod
+lib/version/Internals.pod
+lib/version/regex.pm
 t/00impl-pp.t
 t/01base.t
 t/02derived.t
@@ -20,6 +19,7 @@ t/08_corelist.t
 t/09_list_util.t
 t/10_lyon.t
 t/10cperl.t
+t/11_taint.t
 t/coretests.pm
 t/survey_locales
 vperl/vpp.pm
@@ -30,3 +30,5 @@ vutil/vutil.c
 vutil/vutil.h
 vutil/vxs.inc
 vutil/vxs.xs
+META.yml                                 Module YAML meta-data (added by MakeMaker)
+META.json                                Module JSON meta-data (added by MakeMaker)

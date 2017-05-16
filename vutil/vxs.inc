@@ -147,7 +147,8 @@ VXS(universal_version)
 	    else {
 #if PERL_VERSION >= 8
 		Perl_croak(aTHX_
-			     "%" SVf " defines neither package nor VERSION--version check failed",
+			     "%" SVf " defines neither package nor VERSION--"
+                             "version check failed",
 			     (void*)(ST(0)) );
 #else
 		Perl_croak(aTHX_ "%s does not define $%s::VERSION--version check failed",
