@@ -5,7 +5,8 @@ use v5.10;
 use strict;
 
 use vars qw(@ISA $VERSION $CLASS );
-$VERSION = 0.9917;
+$VERSION = '0.9917_02c';
+$VERSION =~ s/c$//;
 $CLASS = 'version::vxs';
 
 eval {
