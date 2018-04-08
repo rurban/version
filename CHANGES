@@ -5,13 +5,16 @@ This is not a complete list of changes.  See repository for full details:
     https://bitbucket.org/jpeacock/version (primary)
     https://github.com/rurban/version (cperl)
 
-0.9919_01 - 2017-04-08  (rurban)
-
-  * merged cperl support
-
 0.9921 - 2018-04-##
   * Silence overly compulsive GCC 7 warning
 	https://rt.cpan.org/Ticket/Display.html?id=123477
+
+  * Improve docs regarding trailing zeros
+	https://rt.cpan.org/Ticket/Display.html?id=122858
+
+0.9919_01 - 2017-04-08  (rurban)
+
+  * merged cperl support
 
 0.9919 - 2018-04-08
 
