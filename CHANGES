@@ -5,6 +5,15 @@ This is not a complete list of changes.  See repository for full details:
     https://bitbucket.org/jpeacock/version (primary)
     https://github.com/rurban/version (cperl)
 
+0.9919_01 - 2017-04-08  (rurban)
+
+  * merged cperl support
+
+0.9919 - 2018-04-08
+
+  * Core improvements to locale handling
+	https://rt.cpan.org/Ticket/Display.html?id=124563
+
 0.9918_01c - 2017-04-16  (rurban)
 
   * merged cperl support

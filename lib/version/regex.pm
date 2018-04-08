@@ -8,8 +8,8 @@ use vars qw(
     $LAX_DECIMAL_VERSION $LAX_DOTTED_DECIMAL_VERSION
 );
 
-$VERSION = '0.9918_01c';
-$VERSION =~ s/c$//;
+$VERSION = '0.9919_01';
+#$VERSION =~ s/c$//;
 
 #--------------------------------------------------------------------------#
 # Version regexp components
