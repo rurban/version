@@ -4,9 +4,18 @@ This is not a complete list of changes.  See repository for full details:
 
     https://github.com/JohnPeacock/version.pm.git
 
+0.9924_02 - 2018-10-13  (rurban)
+
+  * merged with cperl
+  * more 5.6 fixes
+
 0.9924 - 2018-04-19
   * Revise CPAN metadata to advertise correct repo
 	Patch from Ed <ej_zg@hotmail.com>
+
+0.9923_02 - 2017-09-07  (rurban)
+
+  * merged with cperl, use vars => our.
 
 0.9923 - 2018-04-15
   * Add back spaces for picky C++ compilers 
@@ -27,14 +36,18 @@ This is not a complete list of changes.  See repository for full details:
   * Backwards compatible locale handling
 	https://rt.cpan.org/Ticket/Display.html?id=125042
 
-0.9921 - 2018-04-##
-  * Silence overly compulsive GCC 7 warning
-	https://rt.cpan.org/Ticket/Display.html?id=123477
+0.9991_01 - 2017-04-08  (rurban)
+
+  * merged cperl support
 
 0.9919 - 2018-04-08
 
   * Core improvements to locale handling
 	https://rt.cpan.org/Ticket/Display.html?id=124563
+
+0.9918_01c - 2017-04-16  (rurban)
+
+  * merged cperl support
 
 0.9918 - 2017-04-15
 
@@ -52,6 +65,22 @@ This is not a complete list of changes.  See repository for full details:
 
   * Better taint handling for Perl < 5.17.2 with tests
 	https://rt.cpan.org/Ticket/Display.html?id=118087
+
+0.9917_02c - 2016-10-29 (rurban)
+
+  * add more 04strict_lax.t cperl tests
+  * Update to 0.9917 lyon _ concensus
+  * plus several cperl fixes
+
+0.9917_01c - 2016-10-16 (rurban)
+
+  * merged cperl support
+  * parse v1.0c natively in toke.c
+    See GH #211
+    upgrade version::regex to parse the c suffix. (lax/strict)
+
+  * not merged the version 0.9917 alpha/width removal,
+  * just some '_' fixes.
 
 0.9917 - 2016-05-29
 

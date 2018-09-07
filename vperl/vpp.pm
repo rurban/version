@@ -123,7 +123,8 @@ use warnings::register;
 
 use Config;
 
-our $VERSION = 0.9924;
+our $VERSION = '0.9924_02';
+$VERSION = eval $VERSION;
 our $CLASS = 'version::vpp';
 our ($LAX, $STRICT, $WARN_CATEGORY);
 
@@ -143,7 +144,7 @@ require version::regex;
 use overload (
     '""'       => \&stringify,
     '0+'       => \&numify,
-    'cmp'      => \&vcmp,
+    'cmp'      => \&scmp,
     '<=>'      => \&vcmp,
     'bool'     => \&vbool,
     '+'        => \&vnoop,
@@ -433,7 +434,7 @@ version_prescan_finish:
 	$d++;
     }
 
-    if ($d && !isDIGIT($d) && (! ($d eq ';' || $d eq '}') )) {
+    if ($d && !isDIGIT($d) && (! ($d eq 'c' || $d eq ';' || $d eq '}') )) {
 	# trailing non-numeric data
 	return BADVERSION($s,$errstr,"Invalid version format (non-numeric data)");
     }
@@ -700,7 +701,7 @@ sub new {
 
     my $s = scan_version($value, \$self, $qv);
 
-    if ($s) { # must be something left over
+    if ($s and $s ne 'c') { # must be something left over
 	warn(sprintf "Version string '%s' contains invalid data; "
 		   ."ignoring: '%s'", $value, $s);
     }
@@ -775,6 +776,62 @@ sub stringify {
 	    : $self->numify;
 }
 
+sub scmp {
+    my ($left,$right,$swap) = @_;
+    my $class = ref($left);
+    unless ( UNIVERSAL::isa($right, $class) ) {
+	$right = $class->new($right);
+    }
+
+    if ( $swap ) {
+	($left, $right) = ($right, $left);
+    }
+    unless (_verify($left)) {
+	require Carp;
+	Carp::croak("Invalid version object");
+    }
+    unless (_verify($right)) {
+	require Carp;
+	Carp::croak("Invalid version format");
+    }
+    my $l = $#{$left->{version}};
+    my $r = $#{$right->{version}};
+    my $m = $l < $r ? $l : $r;
+    my $lalpha = $left->is_alpha;
+    my $ralpha = $right->is_alpha;
+    my $lc     = exists $left->{cperl};
+    my $rc     = exists $right->{cperl};
+    my $retval = 0;
+    my $i = 0;
+    while ( $i <= $m && $retval == 0 ) {
+        $retval = $left->{version}[$i] cmp $right->{version}[$i];
+        $retval = $rc ? 1 : -1 if $retval == 0 and $lc != $rc;
+	$i++;
+    }
+
+    # possible match except for trailing 0's
+    if ( $retval == 0 && $l != $r ) {
+	if ( $l < $r ) {
+	    while ( $i <= $r && $retval == 0 ) {
+		if ( $right->{version}[$i] != 0 ) {
+		    $retval = -1; # not a match after all
+		}
+		$i++;
+	    }
+	}
+	else {
+	    while ( $i <= $l && $retval == 0 ) {
+		if ( $left->{version}[$i] != 0 ) {
+		    $retval = +1; # not a match after all
+		}
+		$i++;
+	    }
+	}
+    }
+
+    return $retval;
+}
+
 sub vcmp {
     my ($left,$right,$swap) = @_;
     my $class = ref($left);
@@ -798,10 +855,13 @@ sub vcmp {
     my $m = $l < $r ? $l : $r;
     my $lalpha = $left->is_alpha;
     my $ralpha = $right->is_alpha;
+    my $lc     = exists $left->{cperl};
+    my $rc     = exists $right->{cperl};
     my $retval = 0;
     my $i = 0;
     while ( $i <= $m && $retval == 0 ) {
 	$retval = $left->{version}[$i] <=> $right->{version}[$i];
+        $retval = $rc ? 1 : -1 if $retval == 0 and $lc != $rc;
 	$i++;
     }
 
