@@ -5,6 +5,10 @@ This is not a complete list of changes.  See repository for full details:
     https://bitbucket.org/jpeacock/version (primary)
     https://github.com/rurban/version (cperl)
 
+0.9923_02 - 2017-09-07  (rurban)
+
+  * merged with cperl, use vars => our.
+
 0.9921_01 - 2017-09-07  (rurban)
 
   * merged cperl support

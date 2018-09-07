@@ -29,11 +29,6 @@
 #  define MUTABLE_SV(p)	((SV *)MUTABLE_PTR(p))
 #endif
 
-#ifndef hv_existss
-#  define hv_existss(hv, key) \
-          hv_exists((hv), ("" key ""), (sizeof(key)-1))
-#endif
-
 #ifndef SvPVx_nolen_const
 #  if defined(__GNUC__) && !defined(PERL_GCC_BRACE_GROUPS_FORBIDDEN)
 #    define SvPVx_nolen_const(sv) ({SV *_sv = (sv); SvPV_nolen_const(_sv); })
@@ -120,7 +115,7 @@ S_croak_xs_usage(pTHX_ const CV *const cv, const char *const params)
             Perl_croak_nocontext("Usage: %s(%s)", gvname, params);
     } else {
         /* Pants. I don't think that it should be possible to get here. */
-        Perl_croak_nocontext("Usage: CODE(0x%"UVxf")(%s)", PTR2UV(cv), params);
+        Perl_croak_nocontext("Usage: CODE(0x%" UVxf ")(%s)", PTR2UV(cv), params);
     }
 }
 
@@ -228,32 +223,43 @@ const char * Perl_prescan_version(pTHX_ const char *s, bool strict, const char**
 #endif
 
 
-#if PERL_VERSION_LT(5,27,9)
+#if !defined(LC_NUMERIC_LOCK) /* PERL_VERSION_LT(5,27,9) */
 #  define LC_NUMERIC_LOCK
 #  define LC_NUMERIC_UNLOCK
-#if PERL_VERSION_LT(5,19,0)
-#   undef STORE_LC_NUMERIC_SET_STANDARD
-#   undef RESTORE_LC_NUMERIC
-#   undef DECLARATION_FOR_LC_NUMERIC_MANIPULATION
-# ifdef USE_LOCALE
-#    define DECLARATION_FOR_LC_NUMERIC_MANIPULATION char *loc
-#    define STORE_NUMERIC_SET_STANDARD()\
-	loc = savepv(setlocale(LC_NUMERIC, NULL));  \
-	SAVEFREEPV(loc); \
-	setlocale(LC_NUMERIC, "C");
-
-#    define RESTORE_LC_NUMERIC()\
-	setlocale(LC_NUMERIC, loc);
-# else
-#    define DECLARATION_FOR_LC_NUMERIC_MANIPULATION
-#    define STORE_LC_NUMERIC_SET_STANDARD()
-#    define RESTORE_LC_NUMERIC()
-#   endif
-# endif
+#  if PERL_VERSION_LT(5,19,0)
+#    undef STORE_LC_NUMERIC_SET_STANDARD
+#    undef RESTORE_LC_NUMERIC
+#    undef DECLARATION_FOR_LC_NUMERIC_MANIPULATION
+#    ifdef USE_LOCALE
+#      define DECLARATION_FOR_LC_NUMERIC_MANIPULATION char *loc
+#      define STORE_NUMERIC_SET_STANDARD()\
+	 loc = savepv(setlocale(LC_NUMERIC, NULL));  \
+	 SAVEFREEPV(loc); \
+	 setlocale(LC_NUMERIC, "C");
+#      define RESTORE_LC_NUMERIC()\
+	 setlocale(LC_NUMERIC, loc);
+#    else
+#      define DECLARATION_FOR_LC_NUMERIC_MANIPULATION
+#      define STORE_LC_NUMERIC_SET_STANDARD()
+#      define RESTORE_LC_NUMERIC()
+#    endif
+#  endif
 #endif
+
 #ifndef LOCK_NUMERIC_STANDARD
 #  define LOCK_NUMERIC_STANDARD()
+#endif
+
+#ifndef UNLOCK_NUMERIC_STANDARD
 #  define UNLOCK_NUMERIC_STANDARD()
+#endif
+
+/* The names of these changed in 5.28 */
+#ifndef LOCK_LC_NUMERIC_STANDARD
+#  define LOCK_LC_NUMERIC_STANDARD() LOCK_NUMERIC_STANDARD()
+#endif
+#ifndef UNLOCK_LC_NUMERIC_STANDARD
+#  define UNLOCK_LC_NUMERIC_STANDARD() UNLOCK_NUMERIC_STANDARD()
 #endif
 
 /* from cperl */
@@ -262,4 +268,11 @@ const char * Perl_prescan_version(pTHX_ const char *s, bool strict, const char**
 #endif
 #ifndef strEQc
 #  define strEQc(s, c) memEQ(s, ("" c ""), sizeof(c))
+#  define strNEc(s, c) memNE(s, ("" c ""), sizeof(c))
 #endif
+#ifndef hv_existss
+#  define hv_existss(hv, key) \
+          hv_exists((hv), ("" key ""), (sizeof(key)-1))
+#endif
+
+/* ex: set ro: */

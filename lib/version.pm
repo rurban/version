@@ -4,15 +4,11 @@ package version;
 use 5.006002;
 use strict;
 use warnings::register;
-if ($] >= 5.015) {
-    warnings::register_categories(qw/version/);
-}
 
-use vars qw(@ISA $VERSION $CLASS $STRICT $LAX *declare *qv);
-
-$VERSION = '0.9921_01';
+our $VERSION = '0.9923_02';
 #$VERSION =~ s/c$//;
-$CLASS = 'version';
+our $CLASS = 'version';
+our (@ISA, $STRICT, $LAX);
 
 # !!!!Delete this next block completely when adding to Perl core!!!!
 {

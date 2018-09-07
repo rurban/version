@@ -305,7 +305,7 @@ Perl_scan_version(pTHX_ const char *s, SV *rv, bool qv)
     last = PRESCAN_VERSION(s, FALSE, &errstr, &qv, &saw_decimal, &width, &alpha);
     if (errstr) {
 	/* "undef" is a special case and not an error */
-	if ( strNEs(s, "undef") ) {
+	if ( !strEQc(s, "undef") ) {
 	    Perl_croak(aTHX_ "%s", errstr);
 	}
     }
@@ -357,7 +357,7 @@ Perl_scan_version(pTHX_ const char *s, SV *rv, bool qv)
  			rev += (*s - '0') * mult;
  			mult /= 10;
 			if (   (PERL_ABS(orev) > PERL_ABS(rev)) 
-			    || (PERL_ABS(rev) > VERSION_MAX )) {
+                            || ((U32)PERL_ABS(rev) > VERSION_MAX )) {
 			    Perl_ck_warner(aTHX_ packWARN(WARN_OVERFLOW), 
 					   "Integer overflow in version %d",VERSION_MAX);
 			    s = end - 1;
@@ -668,8 +668,8 @@ VER_NV:
             LC_NUMERIC_LOCK(0);    /* Start critical section */
 
             locale_name_on_entry = setlocale(LC_NUMERIC, NULL);
-            if (   strNE(locale_name_on_entry, "C")
-                && strNE(locale_name_on_entry, "POSIX"))
+            if (   strNEc(locale_name_on_entry, "C")
+                && strNEc(locale_name_on_entry, "POSIX"))
             {
                 setlocale(LC_NUMERIC, "C");
             }
@@ -726,12 +726,12 @@ VER_NV:
 #endif
 
 	if (sv) {
-	    Perl_sv_catpvf(aTHX_ sv, "%.9" NVff, SvNVX(ver));
+                Perl_sv_catpvf(aTHX_ sv, "%.9" NVff, SvNVX(ver));
 	    len = SvCUR(sv);
 	    buf = SvPVX(sv);
 	}
 	else {
-	    len = my_snprintf(tbuf, sizeof(tbuf), "%.9" NVff, SvNVX(ver));
+                len = my_snprintf(tbuf, sizeof(tbuf), "%.9" NVff, SvNVX(ver));
 	    buf = tbuf;
 	}
 
